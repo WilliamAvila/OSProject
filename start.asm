@@ -1,5 +1,8 @@
+.extern _main
 
+entry start
 
-_start: call _main
+start: 
+	   call _main
 
-_loop: j _start
+loop1: jmp loop1
