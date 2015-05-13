@@ -7,8 +7,10 @@
 void clear_screen();
 void printString(char *);
 void readString(char *);
+void CleanSpace(int);
 void main(){
 	
+	 char line[80];
 	 char* x ;
 	 char* y;
      char* arr = "Hello World";
@@ -17,8 +19,8 @@ void main(){
      int j;
      int columns=0x8000;
      int color =0x0;
-	 char line[80];
-     clear_screen();
+	 char buffer[512];
+    // clear_screen();
 
      /*for(j =0;j<16;j++){
            for( i =0;i<SIZE;i++){
@@ -32,22 +34,23 @@ void main(){
 	        a+=160;
 		    }*/
 
+		setCursor(0,0,1);
+		makeInterrupt21();
+		loadProgram();
 
-			for(j=0;j<80;j++){
-				x[i] = readChar();
-				if(x[i]==0xd){
-					String(line);
-					break;
-				}
-			line[i] = x[i];
-			printChar(x[i]);
+		
 
-		}
 
-		//printString("Hello World \0");
+		/*printString("Enter a line: \0");
+		readString(line);
+		printString(line);*/
+
+		/*CleanSpace(1000);
+		readString(x);
+
+		printString("Hello World \0");*/
 
 }
-
 
 void printString(char * arr){
 	int x =0;
@@ -59,11 +62,42 @@ void printString(char * arr){
 
 }
 
-void readString(char arr[]){
-	int i;
+void CleanSpace(int i){
+	int j;
+	
 	printChar('\n');
-	for(i =0;i<80;i++)					
-		printChar(arr[i]);
+	for(j=0;j<i;j++)
+		printChar(0x8);
+
+}
+
+
+
+void readString(char *x){
+		int j =0;
+
+		while(j<81){
+				x[j] = readChar();
+				if(x[j]==0x8){
+					printChar(0x8);
+					printChar(0x0);
+					printChar(0x8);
+					j-=1;
+					
+				}else if(x[j] == 0xd){
+					printChar('\n');
+					printChar(0x8);
+					x[j] ='\0';
+					break;
+				}
+				else if(j<80){
+					printChar(x[j]);
+					j++;
+				}
+
+		}
+	
+		CleanSpace(j-1);
 }
 
 void clear_screen(){

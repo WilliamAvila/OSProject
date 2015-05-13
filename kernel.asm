@@ -9,7 +9,16 @@
 	.global _interrupt
 	.global _makeInterrupt21
 	.global _loadProgram
+	.global _setCursor
+	.global _readSector
+	.global _setBackground
 ;	.extern _handleInterrupt21
+	.extern _printString
+	.extern _readString
+
+
+
+
 
 ;void putInMemory (int segment, int address, char character)
 _putInMemory:
@@ -43,6 +52,74 @@ _readChar:
 	int #0x16
 	pop bp
 	ret
+
+;void setCursor (Row,Column,PageNumber)
+_setCursor:
+	push bp
+	mov bp,sp
+	mov dh,[bp+4]
+	mov dl,[bp+6]
+	mov bh,[bp+8]
+	mov ah, #0x2
+	int #0x10
+	mov al,bh
+	mov ah, #0x5
+	int #0x10
+
+	pop bp
+	ret
+
+;void setBackground(background)
+_setBackground:
+      push bp
+      mov bp,sp
+      mov bl,[bp+4]
+      mov ah,#0x0b
+      mov bh,#0x01
+      int #0x10
+      pop bp
+      ret
+	
+
+;void readSector(char* buffer, int sector)
+_readSector:
+	push bp
+	mov bp,sp
+	sub sp,#6
+	mov bx,[bp+4] ;buffer
+	mov ax,[bp+6]
+	
+	mov cl,#36
+	div cl
+	xor ah,ah
+	mov [bp-2],ax  ;Track
+	
+	mov ax,[bp+6]
+	mov cl,#18
+	div cl
+	and al,#0x1
+	
+	xor dx,dx
+	mov dl,al
+	mov [bp-4],dx ;Head
+
+	add ah,#1
+	xor dx,dx
+	mov dl,ah
+	mov [bp-6],dx ;Relative Sector
+	
+	mov ah,#0x2
+	mov al,#0x1
+	mov ch,[bp-2]
+	mov dh,[bp-4]
+	mov cl,[bp-6]
+	mov dl,#0x0
+	int #0x13
+	
+	add sp, #6
+	pop bp
+	ret
+
 
 ;int interrupt (int number, int AX, int BX, int CX, int DX)
 _interrupt:
@@ -88,6 +165,20 @@ _makeInterrupt21:
 ;it will call your function:
 ;void handleInterrupt21 (int AX, int BX, int CX, int DX)
 _interrupt21ServiceRoutine:
+	
+	cmp ax, #0 
+	je _callPrintString
+	
+	cmp ax, #1
+	je _callreadString
+	
+	cmp ax, #2
+	je _callreadSector
+	
+	
+	jmp _end
+
+	
 ;	push dx
 ;	push cx
 ;	push bx
@@ -99,6 +190,31 @@ _interrupt21ServiceRoutine:
 ;	pop dx
 ;	iret
 ; Load a program from sector 11 into segment 0x20000
+
+
+_callPrintString:
+	push bx
+	call _printString
+	add sp,#2
+	jmp _end
+	
+_callreadString:
+	push bx
+	call _readString
+	add sp,#2
+	jmp _end
+	
+_callreadSector:
+	push cx
+	push bx
+	call _readSector
+	add sp,#4
+	jmp _end
+  
+_end:
+      iret
+
+
 
 _loadProgram:
 	mov ax, #0x2000
