@@ -33,13 +33,20 @@ void main(){
 	        color+=1;
 	        a+=160;
 		    }*/
-
-		setCursor(0,0,1);
-		makeInterrupt21();
-		loadProgram();
-
+		initVideo();
+		
+		setCursor(1,1,0);
+		printString("                          Welcome to the my OS");
 		
 
+		setCursor(getCursorRow(),getCursorColumn()+1,0);
+		readChar();
+		setCursor(0,0,0);
+		
+		initVideo();
+		setBackground(0x43);
+		makeInterrupt21();
+		loadProgram();
 
 		/*printString("Enter a line: \0");
 		readString(line);
@@ -55,7 +62,7 @@ void main(){
 void printString(char * arr){
 	int x =0;
 	while(arr[x]!='\0'){
-		printChar(arr[x]);
+			printChar(arr[x]);
 		x++;
 	}
 
@@ -78,10 +85,10 @@ void readString(char *x){
 
 		while(j<81){
 				x[j] = readChar();
-				if(x[j]==0x8){
+				if(x[j]==0x8 && j > 0){
 					printChar(0x8);
 					printChar(0x0);
-					printChar(0x8);
+					printChar(0x8);		
 					j-=1;
 					
 				}else if(x[j] == 0xd){
@@ -90,10 +97,11 @@ void readString(char *x){
 					x[j] ='\0';
 					break;
 				}
-				else if(j<80){
+				else if(j<80 && x[j] != 0x8 && x[j] != 0xd){
 					printChar(x[j]);
 					j++;
 				}
+				
 
 		}
 	

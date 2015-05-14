@@ -12,13 +12,27 @@
 	.global _setCursor
 	.global _readSector
 	.global _setBackground
+	.global _initVideo
+	.global _printCharColor
+	.global _getCursorRow
+	.global _getCursorColumn
 ;	.extern _handleInterrupt21
 	.extern _printString
 	.extern _readString
 
 
 
+_initVideo:
+    pusha
 
+    mov ax, #0x0700  ; function 07, AL=0 means scroll whole window
+    mov bh, #0x07    ; character attribute = white on black
+    mov cx, #0x0000  ; row = 0, col = 0
+    mov dx, #0x184f  ; row = 24 (0x18), col = 79 (0x4f)
+    int 0x10        ; call BIOS video interrupt
+
+    popa
+    ret
 
 ;void putInMemory (int segment, int address, char character)
 _putInMemory:
@@ -40,6 +54,19 @@ _printChar:
 	mov bp,sp
 	mov al,[bp+4]
 	mov ah, #0x0e
+	int #0x10
+	pop bp
+	ret
+
+;void printChar (char character, int color,int page, int number)
+_printCharColor:
+	push bp
+	mov bp,sp
+	mov al,[bp+4]
+	mov bl,[bp+6]
+	mov bh,[bp+8]
+	mov cx,[bp+10]
+	mov ah, #0x09
 	int #0x10
 	pop bp
 	ret
@@ -68,6 +95,25 @@ _setCursor:
 
 	pop bp
 	ret
+	
+;void getCursor()
+_getCursorRow:
+    push bp
+    mov ah,#0x3
+    mov bh,#0
+    int #0x10
+    xor dx,dx
+    mov ah,dh
+    pop bp
+    ret
+    
+_getCursorColumn:
+    mov ah,#0x3
+    mov bh,#0
+    int #0x10
+    xor dl,dl
+    mov ah,dl
+    ret
 
 ;void setBackground(background)
 _setBackground:
@@ -75,7 +121,7 @@ _setBackground:
       mov bp,sp
       mov bl,[bp+4]
       mov ah,#0x0b
-      mov bh,#0x01
+      mov bh,#0x00
       int #0x10
       pop bp
       ret
